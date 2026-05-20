@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Luna's Diary</title>
+  <style>
+    :root {
+      --bg: #fff6fb;
+      --paper: rgba(255, 255, 255, 0.84);
+      --paper-strong: #ffffff;
+      --pink-50: #fff1f8;
+      --pink-100: #ffe1f1;
+      --pink-200: #ffc1df;
+      --pink-300: #ff8fc7;
+      --pink-500: #e84f9c;
+      --rose: #b82f79;
+      --plum: #4a243d;
+      --muted: #8f647d;
+      --lavender: #d9c7ff;
+      --mint: #c9fff0;
+      --butter: #fff1b6;
+      --line: rgba(232, 79, 156, 0.18);
+      --shadow: 0 18px 44px rgba(190, 57, 132, 0.16);
+      --soft-shadow: 0 10px 24px rgba(190, 57, 132, 0.1);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--plum);
+      background:
+        radial-gradient(circle at 10% 10%, rgba(255, 255, 255, .95) 0 8%, transparent 18%),
+        radial-gradient(circle at 92% 8%, rgba(255, 193, 223, .75) 0 9%, transparent 21%),
+        linear-gradient(180deg, #fff8fc 0%, #ffeaf5 46%, #fff9e8 100%);
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .decor {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .float {
+      position: absolute;
+      opacity: .42;
+      filter: drop-shadow(0 8px 12px rgba(184, 47, 121, .15));
+      animation: drift 8.5s ease-in-out infinite;
+    }
+
+    .float:nth-child(1) { top: 36px; left: 18px; font-size: 28px; animation-delay: 0s; }
+    .float:nth-child(2) { top: 118px; right: 18px; font-size: 26px; animation-delay: -2s; }
+    .float:nth-child(3) { top: 334px; left: -8px; font-size: 27px; animation-delay: -4s; }
+    .float:nth-child(4) { bottom: 170px; right: 4px; font-size: 30px; animation-delay: -1s; }
+    .float:nth-child(5) { bottom: 324px; left: 22px; font-size: 22px; animation-delay: -3s; }
+    .float:nth-child(6) { top: 54%; right: 22px; font-size: 24px; animation-delay: -5s; }
+
+    @keyframes drift {
+      0%, 100% { transform: translateY(0) rotate(-5deg) scale(1); }
+      50% { transform: translateY(-14px) rotate(8deg) scale(1.05); }
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 480px);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 16px 14px calc(98px + var(--safe-bottom));
+    }
+
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 7;
+      padding-top: 8px;
+      margin: -8px -4px 10px;
+      backdrop-filter: blur(12px);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .86);
+      border-radius: 28px;
+      padding: 17px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, .86), rgba(255, 237, 247, .78));
+      box-shadow: var(--shadow);
+    }
+
+    .hero::before {
+      content: "🎀";
+      position: absolute;
+      right: 18px;
+      top: 48px;
+      font-size: 46px;
+      opacity: .18;
+      transform: rotate(12deg);
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 50px;
+      height: 50px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 18px;
+      background: conic-gradient(from 210deg, #ff98ca, #fff0a8, #d9c7ff, #ff98ca);
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .8), var(--soft-shadow);
+      font-size: 25px;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 24px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.35;
+    }
+
+    .today-pill {
+      flex: 0 0 auto;
+      border: 0;
+      border-radius: 999px;
+      padding: 9px 11px;
+      color: var(--rose);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 850;
+      box-shadow: var(--soft-shadow);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      min-width: 0;
+      border: 1px solid rgba(255, 255, 255, .82);
+      border-radius: 18px;
+      padding: 10px 7px;
+      text-align: center;
+      background: rgba(255, 255, 255, .64);
+    }
+
+    .stat strong {
+      display: block;
+      color: var(--rose);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 750;
+    }
+
+    .screen {
+      display: none;
+      animation: fadeIn .24s ease both;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 20px 2px 11px;
+    }
+
+    .section-title h2 {
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .mini-note {
+      color: var(--muted);
+      font-size: 11.5px;
+      white-space: nowrap;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+    }
+
+    .quick-card {
+      position: relative;
+      isolation: isolate;
+      min-height: 112px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .74);
+      border-radius: 22px;
+      padding: 14px;
+      text-align: left;
+      color: var(--plum);
+      background: var(--paper);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .quick-card::before {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 0;
+      z-index: -1;
+      background: linear-gradient(135deg, rgba(255, 143, 199, .35), rgba(255, 241, 182, .56));
+      transition: height .24s ease;
+    }
+
+    .quick-card:active::before,
+    .quick-card:hover::before {
+      height: 100%;
+    }
+
+    .quick-card::after {
+      content: attr(data-deco);
+      position: absolute;
+      right: 10px;
+      bottom: 7px;
+      opacity: .22;
+      font-size: 35px;
+      transform: rotate(-8deg);
+    }
+
+    .quick-card .icon {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 10px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--pink-100), #fff8cf);
+      font-size: 20px;
+    }
+
+    .quick-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14.5px;
+      line-height: 1.2;
+    }
+
+    .quick-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .panel {
+      margin-bottom: 14px;
+      border: 1px solid rgba(255, 255, 255, .78);
+      border-radius: 24px;
+      padding: 15px;
+      background: var(--paper);
+      box-shadow: var(--soft-shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .calendar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .month-btn {
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 15px;
+      color: var(--rose);
+      background: var(--pink-100);
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .month-title {
+      text-align: center;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .weekday {
+      color: var(--muted);
+      text-align: center;
+      font-size: 10px;
+      font-weight: 850;
+    }
+
+    .day {
+      position: relative;
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      padding: 7px 3px 4px;
+      text-align: center;
+      background: rgba(255, 255, 255, .62);
+      color: var(--plum);
+    }
+
+    .day.outside {
+      opacity: .35;
+    }
+
+    .day.today {
+      border-color: var(--pink-300);
+      background: #fff0f8;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .9);
+    }
+
+    .day .num {
+      display: block;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 2px;
+      margin-top: 5px;
+      min-height: 5px;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 99px;
+      background: var(--pink-500);
+    }
+
+    .dot.medicine, .dot.injection { background: #8b6be8; }
+    .dot.side { background: #f2a23b; }
+    .dot.intimacy { background: #df3e8e; }
+    .dot.note { background: #35a987; }
+
+    label {
+      display: block;
+      margin: 12px 0 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 47px;
+      border: 1px solid #f4c5df;
+      border-radius: 16px;
+      padding: 12px 13px;
+      outline: none;
+      color: var(--plum);
+      background: rgba(255, 255, 255, .94);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8);
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--pink-300);
+      box-shadow: 0 0 0 4px rgba(255, 143, 199, .24);
+    }
+
+    .two-cols {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .btn {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      border-radius: 17px;
+      padding: 12px 14px;
+      font-weight: 900;
+      color: var(--rose);
+      background: var(--pink-100);
+    }
+
+    .btn-primary {
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+      background: linear-gradient(135deg, #ef5ba9, #bd63d3);
+      box-shadow: 0 14px 28px rgba(210, 78, 166, .26);
+    }
+
+    .btn-primary::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      transform: translateX(-105%);
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .34), transparent);
+      transition: transform .45s ease;
+    }
+
+    .btn-primary:active::before,
+    .btn-primary:hover::before {
+      transform: translateX(105%);
+    }
+
+    .pill-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: 13px;
+    }
+
+    .entries {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .entry {
+      border: 1px solid rgba(255, 193, 223, .82);
+      border-radius: 20px;
+      padding: 13px;
+      background: rgba(255, 255, 255, .86);
+      box-shadow: 0 8px 18px rgba(190, 57, 132, .08);
+    }
+
+    .entry-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .entry-title {
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+
+    .entry-date {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .entry-body {
+      margin-top: 9px;
+      color: #60364f;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .tag {
+      border-radius: 999px;
+      padding: 5px 8px;
+      color: var(--rose);
+      background: var(--pink-100);
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .delete {
+      min-width: 34px;
+      min-height: 32px;
+      border: 0;
+      border-radius: 999px;
+      color: var(--rose);
+      background: #fff0f7;
+      font-weight: 900;
+    }
+
+    .empty-state {
+      border: 1px dashed #efacd2;
+      border-radius: 21px;
+      padding: 24px 14px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(255, 255, 255, .48);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .hint, .privacy-box {
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+
+    .privacy-box {
+      margin-top: 12px;
+      border-radius: 20px;
+      padding: 13px;
+      color: #6b3d58;
+      background: linear-gradient(135deg, rgba(255, 225, 241, .9), rgba(255, 249, 221, .88));
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 12px;
+      z-index: 9;
+      width: min(calc(100% - 24px), 456px);
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+      padding: 8px;
+      padding-bottom: calc(8px + var(--safe-bottom));
+      border: 1px solid rgba(255, 255, 255, .78);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, .88);
+      box-shadow: 0 18px 45px rgba(133, 57, 107, .18);
+      backdrop-filter: blur(18px);
+      transform: translateX(-50%);
+    }
+
+    .nav-btn {
+      min-width: 0;
+      border: 0;
+      border-radius: 19px;
+      padding: 8px 3px 7px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 9.8px;
+      font-weight: 850;
+      line-height: 1.1;
+    }
+
+    .nav-btn span {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 18px;
+    }
+
+    .nav-btn.active {
+      color: var(--rose);
+      background: linear-gradient(135deg, #ffe1f1, #fff2bb);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .88);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: flex-end;
+      padding: 16px;
+      background: rgba(74, 36, 61, .28);
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(100%, 480px);
+      max-height: min(86vh, 760px);
+      overflow: auto;
+      margin: 0 auto;
+      border-radius: 28px;
+      padding: 17px;
+      background: #fff;
+      box-shadow: 0 25px 60px rgba(65, 29, 52, .28);
+      animation: sheet .22s ease;
+    }
+
+    @keyframes sheet {
+      from { opacity: 0; transform: translateY(22px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (min-width: 720px) {
+      .app { padding-top: 24px; }
+      .top { position: relative; }
+    }
+  </style>
+</head>
+<body>
+  <div class="decor" aria-hidden="true">
+    <div class="float">🦋</div>
+    <div class="float">🎀</div>
+    <div class="float">🍬</div>
+    <div class="float">🦄</div>
+    <div class="float">🦋</div>
+    <div class="float">🌸</div>
+  </div>
+
+  <div class="app">
+    <header class="top">
+      <div class="hero">
+        <div class="brand-row">
+          <div class="brand">
+            <div class="logo">🦋</div>
+            <div>
+              <h1>Luna's Diary</h1>
+              <p class="subtitle">Ημερολόγιο ενδομητρίωσης, κύκλου και θεραπείας</p>
+            </div>
+          </div>
+          <button class="today-pill" id="todayLabel" type="button">Σήμερα</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong id="periodCount">0</strong><span>περίοδος</span></div>
+          <div class="stat"><strong id="medCount">0</strong><span>φάρμακα</span></div>
+          <div class="stat"><strong id="injCount">0</strong><span>ενέσεις</span></div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="home" class="screen active">
+        <div class="section-title">
+          <h2>Γρήγορη καταγραφή</h2>
+          <span class="mini-note">ιδιωτικά στη συσκευή</span>
+        </div>
+
+        <div class="quick-grid">
+          <button class="quick-card" data-deco="🌸" type="button" onclick="openModal('period')">
+            <div class="icon">🌸</div><strong>Περίοδος</strong><span>ροή, πόνος, διάθεση, σημείωση</span>
+          </button>
+          <button class="quick-card" data-deco="💊" type="button" onclick="openModal('medicine')">
+            <div class="icon">💊</div><strong>Φάρμακο</strong><span>όνομα, ώρα, δοσολογία</span>
+          </button>
+          <button class="quick-card" data-deco="💉" type="button" onclick="openModal('injection')">
+            <div class="icon">💉</div><strong>Ένεση</strong><span>ημερομηνία, σημείο, επόμενη δόση</span>
+          </button>
+          <button class="quick-card" data-deco="🤍" type="button" onclick="openModal('side')">
+            <div class="icon">🤍</div><strong>Παρενέργεια</strong><span>ένταση, διάρκεια, περιγραφή</span>
+          </button>
+          <button class="quick-card" data-deco="💕" type="button" onclick="openModal('intimacy')">
+            <div class="icon">💕</div><strong>Προσωπικό</strong><span>σεξ, αυνανισμός, άνεση, πόνος</span>
+          </button>
+          <button class="quick-card" data-deco="🎀" type="button" onclick="openModal('note')">
+            <div class="icon">🎀</div><strong>Σημείωση</strong><span>συμπτώματα, γιατρός, σκέψεις</span>
+          </button>
+        </div>
+
+        <div class="section-title">
+          <h2>Ημερολόγιο</h2>
+          <span class="mini-note" id="monthMini">μήνας</span>
+        </div>
+        <div class="panel">
+          <div class="calendar-head">
+            <button class="month-btn" type="button" onclick="shiftMonth(-1)" aria-label="Προηγούμενος μήνας">‹</button>
+            <div class="month-title" id="monthTitle"></div>
+            <button class="month-btn" type="button" onclick="shiftMonth(1)" aria-label="Επόμενος μήνας">›</button>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <p class="hint" style="margin-top:12px;">Οι τελείες δείχνουν καταγραφές μέσα στη μέρα. Πάτησε οποιαδήποτε μέρα για νέα σημείωση σε εκείνη την ημερομηνία.</p>
+        </div>
+
+        <div class="section-title">
+          <h2>Τελευταίες καταγραφές</h2>
+        </div>
+        <div class="entries" id="recentEntries"></div>
+      </section>
+
+      <section id="calendar" class="screen">
+        <div class="section-title">
+          <h2>Όλες οι ημερομηνίες</h2>
+          <span class="mini-note">φίλτρο</span>
+        </div>
+        <div class="panel">
+          <label for="calendarFilter">Κατηγορία</label>
+          <select id="calendarFilter" onchange="renderCalendarList()">
+            <option value="all">Όλα</option>
+            <option value="period">Περίοδος</option>
+            <option value="medicine">Φάρμακα</option>
+            <option value="injection">Ενέσεις</option>
+            <option value="side">Παρενέργειες</option>
+            <option value="intimacy">Προσωπικά</option>
+            <option value="note">Σημειώσεις</option>
+          </select>
+        </div>
+        <div class="entries" id="calendarEntries"></div>
+      </section>
+
+      <section id="meds" class="screen">
+        <div class="section-title">
+          <h2>Θεραπεία</h2>
+          <span class="mini-note">φάρμακα & ενέσεις</span>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-card" data-deco="💊" type="button" onclick="openModal('medicine')">
+            <div class="icon">💊</div><strong>Νέο φάρμακο</strong><span>ώρα και δοσολογία</span>
+          </button>
+          <button class="quick-card" data-deco="💉" type="button" onclick="openModal('injection')">
+            <div class="icon">💉</div><strong>Νέα ένεση</strong><span>σημείο και επόμενη δόση</span>
+          </button>
+        </div>
+        <div class="section-title"><h2>Καταγραφές θεραπείας</h2></div>
+        <div class="entries" id="medEntries"></div>
+      </section>
+
+      <section id="wellness" class="screen">
+        <div class="section-title">
+          <h2>Σώμα & διάθεση</h2>
+          <span class="mini-note">κύκλος, πόνος, προσωπικά</span>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-card" data-deco="🌸" type="button" onclick="openModal('period')">
+            <div class="icon">🌸</div><strong>Περίοδος</strong><span>ροή και πόνος</span>
+          </button>
+          <button class="quick-card" data-deco="🤍" type="button" onclick="openModal('side')">
+            <div class="icon">🤍</div><strong>Παρενέργεια</strong><span>ένταση και διάρκεια</span>
+          </button>
+          <button class="quick-card" data-deco="💕" type="button" onclick="openModal('intimacy')">
+            <div class="icon">💕</div><strong>Προσωπικό</strong><span>σεξ ή αυνανισμός</span>
+          </button>
+          <button class="quick-card" data-deco="🍬" type="button" onclick="openModal('note')">
+            <div class="icon">🍬</div><strong>Σημείωση</strong><span>ό,τι θέλεις να θυμάσαι</span>
+          </button>
+        </div>
+        <div class="section-title"><h2>Wellness log</h2></div>
+        <div class="entries" id="wellnessEntries"></div>
+      </section>
+
+      <section id="settings" class="screen">
+        <div class="section-title">
+          <h2>Ρυθμίσεις</h2>
+          <span class="mini-note">τοπικά δεδομένα</span>
+        </div>
+        <div class="panel">
+          <h2 style="font-size:18px;">Απόρρητο</h2>
+          <p class="hint" style="margin-top:8px;">Οι καταγραφές αποθηκεύονται μόνο στον browser αυτής της συσκευής μέσω localStorage.</p>
+          <div class="privacy-box">Δεν αντικαθιστά γιατρό ή ιατρική συμβουλή. Είναι προσωπικό ημερολόγιο για να οργανώνεις ημερομηνίες, φάρμακα, συμπτώματα και σημειώσεις.</div>
+          <div class="pill-actions">
+            <button class="btn" type="button" onclick="exportData()">Εξαγωγή JSON</button>
+            <button class="btn" type="button" onclick="clearAll()">Καθαρισμός</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h2 style="font-size:18px;">Επόμενη φάση</h2>
+          <p class="hint" style="margin-top:8px;">Reminder για ενέσεις, PIN lock, PDF report για γιατρό, PWA εγκατάσταση και cloud sync μπορούν να μπουν όταν προχωρήσει το backend.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Κάτω μενού">
+    <button class="nav-btn active" type="button" onclick="showScreen('home', this)"><span>🏠</span>Αρχική</button>
+    <button class="nav-btn" type="button" onclick="showScreen('calendar', this)"><span>📅</span>Ημερ.</button>
+    <button class="nav-btn" type="button" onclick="showScreen('meds', this)"><span>💊</span>Θεραπεία</button>
+    <button class="nav-btn" type="button" onclick="showScreen('wellness', this)"><span>🦋</span>Σώμα</button>
+    <button class="nav-btn" type="button" onclick="showScreen('settings', this)"><span>🎀</span>Ρυθμ.</button>
+  </nav>
+
+  <div class="modal" id="entryModal" onclick="modalBackdrop(event)">
+    <div class="modal-card">
+      <div class="entry-top">
+        <div>
+          <h2 id="modalTitle" style="font-size:20px;">Νέα καταγραφή</h2>
+          <p class="subtitle" id="modalSubtitle">Συμπλήρωσε ό,τι χρειάζεται</p>
+        </div>
+        <button class="delete" type="button" onclick="closeModal()" aria-label="Κλείσιμο">×</button>
+      </div>
+      <form id="entryForm" onsubmit="saveEntry(event)">
+        <input type="hidden" id="entryType" />
+        <label for="entryDate">Ημερομηνία</label>
+        <input type="date" id="entryDate" required />
+        <div id="dynamicFields"></div>
+        <label for="entryNotes">Σημειώσεις</label>
+        <textarea id="entryNotes" placeholder="Γράψε σύντομα πώς ένιωσες, πόνο, διάθεση ή κάτι για τον γιατρό..."></textarea>
+        <button class="btn btn-primary" type="submit" style="margin-top:14px;">Αποθήκευση ✨</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const storageKey = "lunasDiaryEntries";
+    const oldStorageKey = "endoBloomEntries";
+    let entries = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem(oldStorageKey) || "[]");
+    let currentMonth = new Date();
+
+    const typeInfo = {
+      period: { title: "Νέα περίοδος 🌸", subtitle: "Ροή, πόνος, διάθεση", label: "Περίοδος", icon: "🌸" },
+      medicine: { title: "Νέο φάρμακο 💊", subtitle: "Όνομα, ώρα και δοσολογία", label: "Φάρμακο", icon: "💊" },
+      injection: { title: "Νέα ένεση 💉", subtitle: "Σημείο ένεσης και επόμενη δόση", label: "Ένεση", icon: "💉" },
+      side: { title: "Νέα παρενέργεια 🤍", subtitle: "Ένταση, διάρκεια, περιγραφή", label: "Παρενέργεια", icon: "🤍" },
+      intimacy: { title: "Προσωπική σημείωση 💕", subtitle: "Σεξ, αυνανισμός, πόνος ή άνεση", label: "Προσωπικό", icon: "💕" },
+      note: { title: "Γενική σημείωση 🎀", subtitle: "Οτιδήποτε θέλεις να θυμάσαι", label: "Σημείωση", icon: "🎀" }
+    };
+
+    function todayISO() {
+      const d = new Date();
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().slice(0, 10);
+    }
+
+    function toISO(date) {
+      const d = new Date(date);
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().slice(0, 10);
+    }
+
+    function formatDate(iso) {
+      if (!iso) return "";
+      return new Date(iso + "T12:00:00").toLocaleDateString("el-GR", { day: "2-digit", month: "short", year: "numeric" });
+    }
+
+    function saveStorage() {
+      localStorage.setItem(storageKey, JSON.stringify(entries));
+    }
+
+    function showScreen(id, btn) {
+      document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      document.querySelectorAll(".nav-btn").forEach(nav => nav.classList.remove("active"));
+      btn.classList.add("active");
+      renderAll();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function openModal(type, date = todayISO()) {
+      const info = typeInfo[type];
+      document.getElementById("entryType").value = type;
+      document.getElementById("modalTitle").textContent = info.title;
+      document.getElementById("modalSubtitle").textContent = info.subtitle;
+      document.getElementById("entryDate").value = date;
+      document.getElementById("entryNotes").value = "";
+      document.getElementById("dynamicFields").innerHTML = fieldsFor(type);
+      document.getElementById("entryModal").classList.add("open");
+    }
+
+    function closeModal() {
+      document.getElementById("entryModal").classList.remove("open");
+    }
+
+    function modalBackdrop(event) {
+      if (event.target.id === "entryModal") closeModal();
+    }
+
+    function fieldsFor(type) {
+      if (type === "period") {
+        return `
+          <div class="two-cols">
+            <div><label for="fieldA">Ροή</label><select id="fieldA"><option>Σταγόνες</option><option>Ελαφριά</option><option>Κανονική</option><option>Έντονη</option></select></div>
+            <div><label for="fieldB">Πόνος</label><select id="fieldB">${Array.from({ length: 11 }, (_, i) => `<option>${i}/10</option>`).join("")}</select></div>
+          </div>
+          <label for="fieldC">Διάθεση</label><select id="fieldC"><option>Ήρεμη</option><option>Ευαίσθητη</option><option>Κουρασμένη</option><option>Αγχωμένη</option><option>Καλή</option></select>`;
+      }
+      if (type === "medicine") {
+        return `
+          <label for="fieldA">Όνομα φαρμάκου</label><input id="fieldA" placeholder="π.χ. παυσίπονο ή ορμονική αγωγή" required>
+          <div class="two-cols">
+            <div><label for="fieldB">Ώρα</label><input type="time" id="fieldB"></div>
+            <div><label for="fieldC">Δοσολογία</label><input id="fieldC" placeholder="π.χ. 1 χάπι"></div>
+          </div>`;
+      }
+      if (type === "injection") {
+        return `
+          <label for="fieldA">Όνομα ή τύπος ένεσης</label><input id="fieldA" placeholder="π.χ. όνομα θεραπείας" required>
+          <label for="fieldB">Σημείο ένεσης</label><select id="fieldB"><option>Κοιλιά</option><option>Μηρός</option><option>Γλουτός</option><option>Μπράτσο</option><option>Άλλο</option></select>
+          <label for="fieldC">Επόμενη ημερομηνία</label><input type="date" id="fieldC">`;
+      }
+      if (type === "side") {
+        return `
+          <label for="fieldA">Παρενέργεια</label><input id="fieldA" placeholder="π.χ. ναυτία, πονοκέφαλος, εξάψεις" required>
+          <div class="two-cols">
+            <div><label for="fieldB">Ένταση</label><select id="fieldB"><option>Ήπια</option><option>Μέτρια</option><option>Έντονη</option></select></div>
+            <div><label for="fieldC">Διάρκεια</label><input id="fieldC" placeholder="π.χ. 2 ώρες"></div>
+          </div>`;
+      }
+      if (type === "intimacy") {
+        return `
+          <label for="fieldA">Είδος</label><select id="fieldA"><option>Σεξ</option><option>Αυνανισμός</option><option>Επιθυμία / libido</option><option>Άλλη προσωπική σημείωση</option></select>
+          <div class="two-cols">
+            <div><label for="fieldB">Πόνος</label><select id="fieldB"><option>Καθόλου</option><option>Ήπιος</option><option>Μέτριος</option><option>Έντονος</option></select></div>
+            <div><label for="fieldC">Άνεση</label><select id="fieldC"><option>Καλή</option><option>Μέτρια</option><option>Δύσκολη</option></select></div>
+          </div>`;
+      }
+      return `
+        <label for="fieldA">Τίτλος</label><input id="fieldA" placeholder="π.χ. ραντεβού, σύμπτωμα, σκέψη" required>
+        <label for="fieldB">Κατηγορία</label><select id="fieldB"><option>Σύμπτωμα</option><option>Γιατρός</option><option>Διάθεση</option><option>Υπενθύμιση</option><option>Άλλο</option></select>
+        <input type="hidden" id="fieldC" value="">`;
+    }
+
+    function saveEntry(event) {
+      event.preventDefault();
+      const type = document.getElementById("entryType").value;
+      entries.unshift({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        type,
+        date: document.getElementById("entryDate").value,
+        a: document.getElementById("fieldA")?.value || "",
+        b: document.getElementById("fieldB")?.value || "",
+        c: document.getElementById("fieldC")?.value || "",
+        notes: document.getElementById("entryNotes").value.trim(),
+        createdAt: new Date().toISOString()
+      });
+      saveStorage();
+      closeModal();
+      renderAll();
+    }
+
+    function escapeHTML(str) {
+      return String(str).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
+    }
+
+    function entryHTML(item) {
+      const info = typeInfo[item.type] || typeInfo.note;
+      const detail = [item.a, item.b, item.c].filter(Boolean);
+      return `
+        <article class="entry">
+          <div class="entry-top">
+            <div>
+              <div class="entry-title">${info.icon} ${escapeHTML(info.label)}${item.a ? " · " + escapeHTML(item.a) : ""}</div>
+              <div class="entry-date">${formatDate(item.date)}</div>
+            </div>
+            <button class="delete" type="button" onclick="deleteEntry('${item.id}')" aria-label="Διαγραφή">×</button>
+          </div>
+          ${detail.length ? `<div class="tag-row">${detail.map(x => `<span class="tag">${escapeHTML(x)}</span>`).join("")}</div>` : ""}
+          ${item.notes ? `<p class="entry-body">${escapeHTML(item.notes)}</p>` : ""}
+        </article>`;
+    }
+
+    function renderList(target, list) {
+      const el = document.getElementById(target);
+      if (!el) return;
+      el.innerHTML = list.length ? list.map(entryHTML).join("") : `<div class="empty-state">🦋 Δεν υπάρχει ακόμα καταγραφή εδώ.</div>`;
+    }
+
+    function deleteEntry(id) {
+      entries = entries.filter(entry => entry.id !== id);
+      saveStorage();
+      renderAll();
+    }
+
+    function renderMetrics() {
+      document.getElementById("periodCount").textContent = entries.filter(e => e.type === "period").length;
+      document.getElementById("medCount").textContent = entries.filter(e => e.type === "medicine").length;
+      document.getElementById("injCount").textContent = entries.filter(e => e.type === "injection").length;
+    }
+
+    function renderMonth() {
+      const grid = document.getElementById("calendarGrid");
+      const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+      const start = new Date(monthStart);
+      const day = (monthStart.getDay() + 6) % 7;
+      start.setDate(monthStart.getDate() - day);
+      const labels = ["Δε", "Τρ", "Τε", "Πε", "Πα", "Σα", "Κυ"];
+      const byDate = entries.reduce((acc, item) => {
+        (acc[item.date] ||= []).push(item);
+        return acc;
+      }, {});
+
+      document.getElementById("monthTitle").textContent = currentMonth.toLocaleDateString("el-GR", { month: "long", year: "numeric" });
+      document.getElementById("monthMini").textContent = currentMonth.toLocaleDateString("el-GR", { month: "short" });
+
+      const cells = labels.map(label => `<div class="weekday">${label}</div>`);
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const iso = toISO(d);
+        const list = byDate[iso] || [];
+        const isOutside = d.getMonth() !== currentMonth.getMonth();
+        const isToday = iso === todayISO();
+        cells.push(`
+          <button class="day ${isOutside ? "outside" : ""} ${isToday ? "today" : ""}" type="button" onclick="openModal('note', '${iso}')">
+            <span class="num">${d.getDate()}</span>
+            <span class="dots">${list.slice(0, 4).map(item => `<span class="dot ${item.type}"></span>`).join("")}</span>
+          </button>`);
+      }
+      grid.innerHTML = cells.join("");
+    }
+
+    function shiftMonth(delta) {
+      currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1);
+      renderMonth();
+    }
+
+    function renderCalendarList() {
+      const filter = document.getElementById("calendarFilter")?.value || "all";
+      const list = filter === "all" ? entries : entries.filter(e => e.type === filter);
+      renderList("calendarEntries", list);
+    }
+
+    function renderAll() {
+      renderMetrics();
+      renderMonth();
+      renderList("recentEntries", entries.slice(0, 5));
+      renderCalendarList();
+      renderList("medEntries", entries.filter(e => e.type === "medicine" || e.type === "injection"));
+      renderList("wellnessEntries", entries.filter(e => ["period", "side", "intimacy", "note"].includes(e.type)));
+    }
+
+    function clearAll() {
+      if (!confirm("Να διαγραφούν όλες οι καταγραφές από αυτή τη συσκευή;")) return;
+      entries = [];
+      saveStorage();
+      renderAll();
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "lunas-diary-data.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById("todayLabel").textContent = new Date().toLocaleDateString("el-GR", { day: "2-digit", month: "short" });
+    renderAll();
+  </script>
+</body>
+</html>
