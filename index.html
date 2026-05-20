@@ -202,6 +202,42 @@
       font-weight: 750;
     }
 
+    .active-date-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+      border: 1px solid rgba(255, 255, 255, .88);
+      border-radius: 18px;
+      padding: 11px 12px;
+      background: rgba(255, 255, 255, .7);
+    }
+
+    .active-date-bar span {
+      display: block;
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .active-date-bar strong {
+      display: block;
+      margin-top: 2px;
+      color: var(--rose);
+      font-size: 17px;
+      line-height: 1.15;
+    }
+
+    .active-date-bar small {
+      max-width: 158px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.3;
+      text-align: right;
+    }
+
     .screen {
       display: none;
       animation: fadeIn .24s ease both;
@@ -372,6 +408,12 @@
       border-color: var(--pink-300);
       background: #fff0f8;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .9);
+    }
+
+    .day.selected {
+      border-color: var(--rose);
+      background: linear-gradient(135deg, #ffe1f1, #fff8fc);
+      box-shadow: 0 8px 18px rgba(184, 47, 121, .16);
     }
 
     .day .num {
@@ -669,7 +711,14 @@
               <p class="subtitle">Ημερολόγιο ενδομητρίωσης, κύκλου και θεραπείας</p>
             </div>
           </div>
-          <button class="today-pill" id="todayLabel" type="button">Σήμερα</button>
+          <button class="today-pill" id="todayLabel" type="button" onclick="selectEntryDate(todayISO(), true)">Σήμερα</button>
+        </div>
+        <div class="active-date-bar">
+          <div>
+            <span>Καταγραφή για</span>
+            <strong id="activeDateLabel">Σήμερα</strong>
+          </div>
+          <small id="activeDateNote">Ό,τι σημειώσεις τώρα θα μπει στη σημερινή ημερομηνία.</small>
         </div>
         <div class="stats">
           <div class="stat"><strong id="periodCount">0</strong><span>περίοδος</span></div>
@@ -709,16 +758,16 @@
 
         <div class="section-title">
           <h2>Ημερολόγιο</h2>
-          <span class="mini-note" id="monthMini">μήνας</span>
+          <span class="mini-note" id="monthMini" data-month-mini>μήνας</span>
         </div>
         <div class="panel">
           <div class="calendar-head">
             <button class="month-btn" type="button" onclick="shiftMonth(-1)" aria-label="Προηγούμενος μήνας">‹</button>
-            <div class="month-title" id="monthTitle"></div>
+            <div class="month-title" id="monthTitle" data-month-title></div>
             <button class="month-btn" type="button" onclick="shiftMonth(1)" aria-label="Επόμενος μήνας">›</button>
           </div>
-          <div class="calendar-grid" id="calendarGrid"></div>
-          <p class="hint" style="margin-top:12px;">Οι τελείες δείχνουν καταγραφές μέσα στη μέρα. Πάτησε οποιαδήποτε μέρα για νέα σημείωση σε εκείνη την ημερομηνία.</p>
+          <div class="calendar-grid" id="calendarGrid" data-calendar-grid></div>
+          <p class="hint" style="margin-top:12px;">Οι τελείες δείχνουν καταγραφές μέσα στη μέρα. Πάτησε μέρα για να γίνει η ημερομηνία καταγραφής.</p>
         </div>
 
         <div class="section-title">
@@ -729,8 +778,22 @@
 
       <section id="calendar" class="screen">
         <div class="section-title">
-          <h2>Όλες οι ημερομηνίες</h2>
+          <h2>Επιλεγμένη ημέρα</h2>
           <span class="mini-note">φίλτρο</span>
+        </div>
+        <div class="panel">
+          <div class="calendar-head">
+            <button class="month-btn" type="button" onclick="shiftMonth(-1)" aria-label="Προηγούμενος μήνας">‹</button>
+            <div class="month-title" data-month-title></div>
+            <button class="month-btn" type="button" onclick="shiftMonth(1)" aria-label="Επόμενος μήνας">›</button>
+          </div>
+          <div class="calendar-grid" data-calendar-grid></div>
+          <p class="hint" style="margin-top:12px;">Διάλεξε μέρα εδώ και μετά πρόσθεσε ή άλλαξε καταγραφή για εκείνη την ημερομηνία.</p>
+          <div class="pill-actions" style="margin-top:12px;">
+            <button class="btn" type="button" onclick="openModal('period')">Περίοδος</button>
+            <button class="btn" type="button" onclick="openModal('medicine')">Φάρμακο</button>
+            <button class="btn" type="button" onclick="openModal('note')">Σημείωση</button>
+          </div>
         </div>
         <div class="panel">
           <label for="calendarFilter">Κατηγορία</label>
@@ -743,6 +806,7 @@
             <option value="intimacy">Προσωπικά</option>
             <option value="note">Σημειώσεις</option>
           </select>
+          <p class="hint" style="margin-top:10px;">Η λίστα δείχνει μόνο τις καταγραφές της ημέρας που έχεις διαλέξει στο ημερολόγιο.</p>
         </div>
         <div class="entries" id="calendarEntries"></div>
       </section>
@@ -846,6 +910,7 @@
     const oldStorageKey = "endoBloomEntries";
     let entries = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem(oldStorageKey) || "[]");
     let currentMonth = new Date();
+    let activeDate = todayISO();
 
     const typeInfo = {
       period: { title: "Νέα περίοδος 🌸", subtitle: "Ροή, πόνος, διάθεση", label: "Περίοδος", icon: "🌸" },
@@ -873,6 +938,17 @@
       return new Date(iso + "T12:00:00").toLocaleDateString("el-GR", { day: "2-digit", month: "short", year: "numeric" });
     }
 
+    function formatLongDate(iso) {
+      if (!iso) return "";
+      return new Date(iso + "T12:00:00").toLocaleDateString("el-GR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+    }
+
+    function selectEntryDate(iso, jumpToMonth = false) {
+      activeDate = iso || todayISO();
+      if (jumpToMonth) currentMonth = new Date(`${activeDate}T12:00:00`);
+      renderAll();
+    }
+
     function saveStorage() {
       localStorage.setItem(storageKey, JSON.stringify(entries));
       localStorage.setItem(`${storageKey}Meta`, JSON.stringify({ updatedAt: new Date().toISOString(), count: entries.length }));
@@ -887,7 +963,7 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    function openModal(type, date = todayISO()) {
+    function openModal(type, date = activeDate) {
       const info = typeInfo[type];
       document.getElementById("entryType").value = type;
       document.getElementById("modalTitle").textContent = info.title;
@@ -1008,8 +1084,17 @@
       document.getElementById("injCount").textContent = entries.filter(e => e.type === "injection").length;
     }
 
+    function renderActiveDate() {
+      const isToday = activeDate === todayISO();
+      document.getElementById("activeDateLabel").textContent = isToday ? `Σήμερα, ${formatDate(activeDate)}` : formatLongDate(activeDate);
+      document.getElementById("activeDateNote").textContent = isToday
+        ? "Ό,τι σημειώσεις τώρα θα μπει στη σημερινή ημερομηνία."
+        : "Ό,τι σημειώσεις τώρα θα μπει σε αυτή την επιλεγμένη μέρα.";
+      document.getElementById("todayLabel").textContent = isToday ? "Σήμερα" : "Πίσω στο σήμερα";
+    }
+
     function renderMonth() {
-      const grid = document.getElementById("calendarGrid");
+      const grids = document.querySelectorAll("[data-calendar-grid]");
       const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
       const start = new Date(monthStart);
       const day = (monthStart.getDay() + 6) % 7;
@@ -1020,8 +1105,12 @@
         return acc;
       }, {});
 
-      document.getElementById("monthTitle").textContent = currentMonth.toLocaleDateString("el-GR", { month: "long", year: "numeric" });
-      document.getElementById("monthMini").textContent = currentMonth.toLocaleDateString("el-GR", { month: "short" });
+      document.querySelectorAll("[data-month-title]").forEach(el => {
+        el.textContent = currentMonth.toLocaleDateString("el-GR", { month: "long", year: "numeric" });
+      });
+      document.querySelectorAll("[data-month-mini]").forEach(el => {
+        el.textContent = currentMonth.toLocaleDateString("el-GR", { month: "short" });
+      });
 
       const cells = labels.map(label => `<div class="weekday">${label}</div>`);
       for (let i = 0; i < 42; i++) {
@@ -1031,13 +1120,16 @@
         const list = byDate[iso] || [];
         const isOutside = d.getMonth() !== currentMonth.getMonth();
         const isToday = iso === todayISO();
+        const isSelected = iso === activeDate;
         cells.push(`
-          <button class="day ${isOutside ? "outside" : ""} ${isToday ? "today" : ""}" type="button" onclick="openModal('note', '${iso}')">
+          <button class="day ${isOutside ? "outside" : ""} ${isToday ? "today" : ""} ${isSelected ? "selected" : ""}" type="button" onclick="selectEntryDate('${iso}', true)">
             <span class="num">${d.getDate()}</span>
             <span class="dots">${list.slice(0, 4).map(item => `<span class="dot ${item.type}"></span>`).join("")}</span>
           </button>`);
       }
-      grid.innerHTML = cells.join("");
+      grids.forEach(grid => {
+        grid.innerHTML = cells.join("");
+      });
     }
 
     function shiftMonth(delta) {
@@ -1047,11 +1139,12 @@
 
     function renderCalendarList() {
       const filter = document.getElementById("calendarFilter")?.value || "all";
-      const list = filter === "all" ? entries : entries.filter(e => e.type === filter);
+      const list = entries.filter(entry => entry.date === activeDate && (filter === "all" || entry.type === filter));
       renderList("calendarEntries", list);
     }
 
     function renderAll() {
+      renderActiveDate();
       renderMetrics();
       renderMonth();
       renderList("recentEntries", entries.slice(0, 5));
