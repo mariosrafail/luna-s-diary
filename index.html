@@ -995,7 +995,7 @@
       }
       if (type === "medicine") {
         return `
-          <label for="fieldA">Όνομα φαρμάκου</label><input id="fieldA" placeholder="π.χ. παυσίπονο ή ορμονική αγωγή" required>
+          <label for="fieldA">Όνομα φαρμάκου</label><select id="fieldA" required><option>Gyno-Tardyferon</option><option>Depon</option></select>
           <div class="two-cols">
             <div><label for="fieldB">Ώρα</label><input type="time" id="fieldB"></div>
             <div><label for="fieldC">Δοσολογία</label><input id="fieldC" placeholder="π.χ. 1 χάπι"></div>
@@ -1003,7 +1003,7 @@
       }
       if (type === "injection") {
         return `
-          <label for="fieldA">Όνομα ή τύπος ένεσης</label><input id="fieldA" placeholder="π.χ. όνομα θεραπείας" required>
+          <label for="fieldA">Όνομα ή τύπος ένεσης</label><select id="fieldA" required><option>Articlox</option><option>Γυναικολόγος</option></select>
           <label for="fieldB">Σημείο ένεσης</label><select id="fieldB"><option>Κοιλιά</option><option>Μηρός</option><option>Γλουτός</option><option>Μπράτσο</option><option>Άλλο</option></select>
           <label for="fieldC">Επόμενη ημερομηνία</label><input type="date" id="fieldC">`;
       }
