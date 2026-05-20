@@ -271,6 +271,44 @@
       white-space: nowrap;
     }
 
+    .daily-quote-card {
+      position: relative;
+      overflow: hidden;
+      margin-top: 22px;
+      border: 1px solid rgba(255, 255, 255, .82);
+      border-radius: 24px;
+      padding: 22px 18px;
+      text-align: center;
+      background: rgba(255, 255, 255, .76);
+      box-shadow: var(--shadow);
+    }
+
+    .daily-quote-card::before {
+      content: "💕";
+      position: absolute;
+      right: 18px;
+      top: 12px;
+      font-size: 36px;
+      opacity: .16;
+      transform: rotate(10deg);
+    }
+
+    .daily-quote-card span {
+      display: block;
+      color: var(--rose);
+      font-size: 11px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .daily-quote-card p {
+      margin-top: 10px;
+      font-size: 21px;
+      line-height: 1.35;
+      font-weight: 850;
+    }
+
     .quick-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -730,50 +768,10 @@
 
     <main>
       <section id="home" class="screen active">
-        <div class="section-title">
-          <h2>Γρήγορη καταγραφή</h2>
-          <span class="mini-note">ιδιωτικά στη συσκευή</span>
+        <div class="daily-quote-card">
+          <span>Η σημερινή ατάκα</span>
+          <p id="dailyQuote"></p>
         </div>
-
-        <div class="quick-grid">
-          <button class="quick-card" data-deco="🌸" type="button" onclick="openModal('period')">
-            <div class="icon">🌸</div><strong>Περίοδος</strong><span>ροή, πόνος, διάθεση, σημείωση</span>
-          </button>
-          <button class="quick-card" data-deco="💊" type="button" onclick="openModal('medicine')">
-            <div class="icon">💊</div><strong>Φάρμακο</strong><span>όνομα, ώρα, δοσολογία</span>
-          </button>
-          <button class="quick-card" data-deco="💉" type="button" onclick="openModal('injection')">
-            <div class="icon">💉</div><strong>Ένεση</strong><span>ημερομηνία, σημείο, επόμενη δόση</span>
-          </button>
-          <button class="quick-card" data-deco="🤍" type="button" onclick="openModal('side')">
-            <div class="icon">🤍</div><strong>Παρενέργεια</strong><span>ένταση, διάρκεια, περιγραφή</span>
-          </button>
-          <button class="quick-card" data-deco="💕" type="button" onclick="openModal('intimacy')">
-            <div class="icon">💕</div><strong>Προσωπικό</strong><span>σεξ, αυνανισμός, άνεση, πόνος</span>
-          </button>
-          <button class="quick-card" data-deco="🎀" type="button" onclick="openModal('note')">
-            <div class="icon">🎀</div><strong>Σημείωση</strong><span>συμπτώματα, γιατρός, σκέψεις</span>
-          </button>
-        </div>
-
-        <div class="section-title">
-          <h2>Ημερολόγιο</h2>
-          <span class="mini-note" id="monthMini" data-month-mini>μήνας</span>
-        </div>
-        <div class="panel">
-          <div class="calendar-head">
-            <button class="month-btn" type="button" onclick="shiftMonth(-1)" aria-label="Προηγούμενος μήνας">‹</button>
-            <div class="month-title" id="monthTitle" data-month-title></div>
-            <button class="month-btn" type="button" onclick="shiftMonth(1)" aria-label="Επόμενος μήνας">›</button>
-          </div>
-          <div class="calendar-grid" id="calendarGrid" data-calendar-grid></div>
-          <p class="hint" style="margin-top:12px;">Οι τελείες δείχνουν καταγραφές μέσα στη μέρα. Πάτησε μέρα για να γίνει η ημερομηνία καταγραφής.</p>
-        </div>
-
-        <div class="section-title">
-          <h2>Τελευταίες καταγραφές</h2>
-        </div>
-        <div class="entries" id="recentEntries"></div>
       </section>
 
       <section id="calendar" class="screen">
@@ -921,6 +919,90 @@
       intimacy: { title: "Προσωπική σημείωση 💕", subtitle: "Σεξ, αυνανισμός, πόνος ή άνεση", label: "Προσωπικό", icon: "💕" },
       note: { title: "Γενική σημείωση 🎀", subtitle: "Οτιδήποτε θέλεις να θυμάσαι", label: "Σημείωση", icon: "🎀" }
     };
+
+    const quoteStarts = [
+      "Σ' αγαπάω πιο πολύ από όσο χωράει η μέρα",
+      "Είσαι το πιο γλυκό μου σήμερα",
+      "Μαζί σου όλα γίνονται πιο μαλακά",
+      "Το χαμόγελό σου μου φτιάχνει τον κόσμο",
+      "Είσαι η αγαπημένη μου σκέψη",
+      "Κάθε μέρα σε διαλέγω ξανά",
+      "Έχεις έναν τρόπο να κάνεις τα πάντα όμορφα",
+      "Είσαι το σπίτι μέσα στη φασαρία",
+      "Σε καμαρώνω πιο πολύ απ' όσο λέω",
+      "Είσαι δύναμη, τρυφερότητα και φως",
+      "Μου αρέσει ο κόσμος όταν είσαι μέσα του",
+      "Είσαι το καλύτερο κομμάτι της ημέρας μου",
+      "Η καρδιά μου ηρεμεί όταν σε σκέφτομαι",
+      "Σου αξίζουν όλα τα απαλά πράγματα",
+      "Είσαι πιο όμορφη και από την πιο καλή μου σκέψη",
+      "Μου λείπεις ακόμα κι όταν μόλις σε είδα",
+      "Είσαι το αγαπημένο μου πρόσωπο",
+      "Μαζί σου νιώθω πιο άνθρωπος",
+      "Σε αγαπάω σε όλες σου τις εκδοχές",
+      "Είσαι μικρό θαύμα στην καθημερινότητά μου",
+      "Η φωνή σου κάνει τη μέρα πιο ζεστή",
+      "Είσαι η πιο όμορφη συνήθεια που δεν θέλω να χάσω",
+      "Σε σκέφτομαι και χαμογελάω χωρίς λόγο",
+      "Είσαι το γλυκό μου καταφύγιο",
+      "Ο τρόπος που υπάρχεις μου αρκεί",
+      "Σ' αγαπάω στα εύκολα και στα δύσκολα",
+      "Είσαι πιο δυνατή απ' όσο νομίζεις",
+      "Μου αρέσει να σε βλέπω να λάμπεις",
+      "Είσαι η αγκαλιά που θέλω στο τέλος της μέρας",
+      "Ό,τι κι αν γίνει, είμαι με το μέρος σου",
+      "Έχεις την πιο όμορφη καρδιά",
+      "Είσαι το κορίτσι που κάνει τη ζωή πιο γλυκιά",
+      "Σε θαυμάζω για όσα είσαι",
+      "Είσαι αρκετή, υπέροχη και αγαπημένη",
+      "Μου κάνεις καλό με έναν ήσυχο τρόπο",
+      "Είσαι η αγαπημένη μου καλημέρα",
+      "Είσαι η πιο τρυφερή μου σκέψη πριν κοιμηθώ",
+      "Σ' αγαπάω χωρίς μέτρο",
+      "Κρατάς ομορφιά ακόμα και στις δύσκολες μέρες",
+      "Είσαι πολύτιμη για μένα",
+      "Το να σε αγαπάω είναι το πιο φυσικό πράγμα",
+      "Είσαι η χαρά που ψάχνω μέσα στη μέρα",
+      "Σου χρωστάω πολλά χαμόγελα",
+      "Είσαι η πιο όμορφη λεπτομέρεια της ζωής μου",
+      "Μαζί σου θέλω όλες τις απλές στιγμές",
+      "Είσαι το ναι μου σε κάθε αύριο",
+      "Σε αγαπάω ακόμα και στις σιωπές μας",
+      "Είσαι η γλύκα που δεν βαριέμαι ποτέ",
+      "Μου αρέσει να μεγαλώνει η αγάπη μας",
+      "Είσαι το πιο όμορφο μήνυμα της μέρας",
+      "Έχεις μέσα σου άνοιξη",
+      "Είσαι ο λόγος που η μέρα παίρνει χρώμα",
+      "Σε αγαπάω με τρόπο ήρεμο και αληθινό",
+      "Είσαι ο άνθρωπος που θέλω δίπλα μου",
+      "Μου αρέσει να σε φροντίζω",
+      "Είσαι η πιο γλυκιά μου προτεραιότητα",
+      "Είσαι όμορφη ακόμα κι όταν δεν το πιστεύεις",
+      "Σ' αγαπάω για το φως και για τις σκιές σου",
+      "Είσαι η αγάπη που θέλω να προσέχω",
+      "Η παρουσία σου κάνει τον χώρο πιο όμορφο",
+      "Είσαι ο πιο καλός μου λόγος",
+      "Μου αρέσει το εμείς που φτιάχνουμε",
+      "Είσαι τρυφερότητα με ψυχή",
+      "Σε θέλω χαρούμενη, ήρεμη και γεμάτη αγάπη",
+      "Είσαι η πιο όμορφη παύση μέσα στη μέρα",
+      "Σ' αγαπάω με όλη μου την καρδιά",
+      "Είσαι το πιο γλυκό μου μυστικό",
+      "Μου αρέσει που είσαι εσύ",
+      "Είσαι η αγάπη που κάνει τα απλά σπουδαία",
+      "Κάθε μέρα μαζί σου αξίζει",
+      "Είσαι η πιο τρυφερή μου αλήθεια",
+      "Σε αγαπάω και σε θαυμάζω",
+      "Είσαι το αγαπημένο μου πάντα"
+    ];
+    const quoteEndings = [
+      "<3",
+      "και σήμερα λίγο παραπάνω.",
+      "να το θυμάσαι.",
+      "με όλη μου την καρδιά.",
+      "πάντα δίπλα σου."
+    ];
+    const dailyQuotes = quoteStarts.flatMap(start => quoteEndings.map(ending => `${start}, ${ending}`));
 
     function todayISO() {
       const d = new Date();
@@ -1095,6 +1177,15 @@
       document.getElementById("todayLabel").textContent = isToday ? "Σήμερα" : "Πίσω στο σήμερα";
     }
 
+    function renderDailyQuote() {
+      const el = document.getElementById("dailyQuote");
+      if (!el) return;
+      const now = new Date();
+      const start = new Date(now.getFullYear(), 0, 0);
+      const dayOfYear = Math.floor((now - start) / 86400000);
+      el.textContent = dailyQuotes[(dayOfYear - 1) % dailyQuotes.length];
+    }
+
     function renderMonth() {
       const grids = document.querySelectorAll("[data-calendar-grid]");
       const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
@@ -1147,6 +1238,7 @@
 
     function renderAll() {
       renderActiveDate();
+      renderDailyQuote();
       renderMetrics();
       renderMonth();
       renderList("recentEntries", entries.slice(0, 5));
