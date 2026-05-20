@@ -798,8 +798,11 @@
           <div class="privacy-box">Δεν αντικαθιστά γιατρό ή ιατρική συμβουλή. Είναι προσωπικό ημερολόγιο για να οργανώνεις ημερομηνίες, φάρμακα, συμπτώματα και σημειώσεις.</div>
           <div class="pill-actions">
             <button class="btn" type="button" onclick="exportData()">Εξαγωγή JSON</button>
+            <button class="btn" type="button" onclick="importData()">Εισαγωγή JSON</button>
             <button class="btn" type="button" onclick="clearAll()">Καθαρισμός</button>
           </div>
+          <input id="importFile" type="file" accept="application/json,.json" hidden onchange="handleImportFile(event)" />
+          <p class="hint" id="backupStatus" style="margin-top:10px;"></p>
         </div>
         <div class="panel">
           <h2 style="font-size:18px;">Επόμενη φάση</h2>
@@ -872,6 +875,7 @@
 
     function saveStorage() {
       localStorage.setItem(storageKey, JSON.stringify(entries));
+      localStorage.setItem(`${storageKey}Meta`, JSON.stringify({ updatedAt: new Date().toISOString(), count: entries.length }));
     }
 
     function showScreen(id, btn) {
@@ -1054,6 +1058,7 @@
       renderCalendarList();
       renderList("medEntries", entries.filter(e => e.type === "medicine" || e.type === "injection"));
       renderList("wellnessEntries", entries.filter(e => ["period", "side", "intimacy", "note"].includes(e.type)));
+      renderBackupStatus();
     }
 
     function clearAll() {
@@ -1064,13 +1069,68 @@
     }
 
     function exportData() {
-      const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
+      const payload = {
+        app: "lunas-diary",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        entries
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "lunas-diary-data.json";
+      a.download = `lunas-diary-backup-${todayISO()}.json`;
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    function importData() {
+      document.getElementById("importFile").click();
+    }
+
+    function normalizeImportedEntry(entry) {
+      return {
+        id: entry.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+        type: typeInfo[entry.type] ? entry.type : "note",
+        date: entry.date || todayISO(),
+        a: entry.a || "",
+        b: entry.b || "",
+        c: entry.c || "",
+        notes: entry.notes || "",
+        createdAt: entry.createdAt || new Date().toISOString()
+      };
+    }
+
+    async function handleImportFile(event) {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+
+      try {
+        const data = JSON.parse(await file.text());
+        const importedEntries = Array.isArray(data) ? data : data.entries;
+        if (!Array.isArray(importedEntries)) throw new Error("Invalid backup");
+
+        if (entries.length && !confirm("Να αντικατασταθούν οι τωρινές καταγραφές με αυτό το backup;")) return;
+
+        entries = importedEntries.map(normalizeImportedEntry).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+        saveStorage();
+        renderAll();
+      } catch (error) {
+        alert("Δεν μπόρεσα να διαβάσω αυτό το JSON backup.");
+      }
+    }
+
+    function renderBackupStatus() {
+      const el = document.getElementById("backupStatus");
+      if (!el) return;
+      const meta = JSON.parse(localStorage.getItem(`${storageKey}Meta`) || "{}");
+      if (!meta.updatedAt) {
+        el.textContent = entries.length ? `${entries.length} καταγραφές αποθηκευμένες σε αυτή τη συσκευή.` : "Δεν υπάρχει ακόμα τοπικό backup σε αυτή τη συσκευή.";
+        return;
+      }
+      const updated = new Date(meta.updatedAt).toLocaleString("el-GR", { dateStyle: "short", timeStyle: "short" });
+      el.textContent = `${meta.count || entries.length} καταγραφές στη συσκευή. Τελευταία αποθήκευση: ${updated}.`;
     }
 
     document.getElementById("todayLabel").textContent = new Date().toLocaleDateString("el-GR", { day: "2-digit", month: "short" });
