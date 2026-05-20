@@ -867,6 +867,7 @@
           </div>
           <input id="importFile" type="file" accept="application/json,.json" hidden onchange="handleImportFile(event)" />
           <p class="hint" id="backupStatus" style="margin-top:10px;"></p>
+          <p class="hint" id="cloudStatus" style="margin-top:8px;"></p>
         </div>
         <div class="panel">
           <h2 style="font-size:18px;">Επόμενη φάση</h2>
@@ -952,6 +953,7 @@
     function saveStorage() {
       localStorage.setItem(storageKey, JSON.stringify(entries));
       localStorage.setItem(`${storageKey}Meta`, JSON.stringify({ updatedAt: new Date().toISOString(), count: entries.length }));
+      syncNextcloud();
     }
 
     function showScreen(id, btn) {
@@ -1250,6 +1252,29 @@
       }
       const updated = new Date(meta.updatedAt).toLocaleString("el-GR", { dateStyle: "short", timeStyle: "short" });
       el.textContent = `${meta.count || entries.length} καταγραφές στη συσκευή. Τελευταία αποθήκευση: ${updated}.`;
+    }
+
+    function setCloudStatus(message) {
+      const el = document.getElementById("cloudStatus");
+      if (el) el.textContent = message;
+    }
+
+    async function syncNextcloud() {
+      setCloudStatus("Συγχρονισμός με Nextcloud...");
+      try {
+        const response = await fetch("/.netlify/functions/sync-nextcloud", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ entries })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.error || "Sync failed");
+
+        const synced = new Date(result.syncedAt).toLocaleString("el-GR", { dateStyle: "short", timeStyle: "short" });
+        setCloudStatus(`Nextcloud ενημερώθηκε: ${synced}.`);
+      } catch (error) {
+        setCloudStatus("Τοπικά αποθηκευμένο. Το Nextcloud δεν ενημερώθηκε.");
+      }
     }
 
     document.getElementById("todayLabel").textContent = new Date().toLocaleDateString("el-GR", { day: "2-digit", month: "short" });
