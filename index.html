@@ -861,8 +861,8 @@
           <p class="hint" style="margin-top:8px;">Οι καταγραφές αποθηκεύονται μόνο στον browser αυτής της συσκευής μέσω localStorage.</p>
           <div class="privacy-box">Δεν αντικαθιστά γιατρό ή ιατρική συμβουλή. Είναι προσωπικό ημερολόγιο για να οργανώνεις ημερομηνίες, φάρμακα, συμπτώματα και σημειώσεις.</div>
           <div class="pill-actions">
-            <button class="btn" type="button" onclick="exportData()">Εξαγωγή JSON</button>
-            <button class="btn" type="button" onclick="importData()">Εισαγωγή JSON</button>
+            <button class="btn" type="button" onclick="saveDataFile()">Αποθήκευση αρχείου</button>
+            <button class="btn" type="button" onclick="loadDataFile()">Φόρτωση αρχείου</button>
             <button class="btn" type="button" onclick="clearAll()">Καθαρισμός</button>
           </div>
           <input id="importFile" type="file" accept="application/json,.json" hidden onchange="handleImportFile(event)" />
@@ -1161,23 +1161,45 @@
       renderAll();
     }
 
-    function exportData() {
-      const payload = {
+    function backupPayload() {
+      return {
         app: "lunas-diary",
         version: 1,
-        exportedAt: new Date().toISOString(),
+        savedAt: new Date().toISOString(),
         entries
       };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    }
+
+    async function saveDataFile() {
+      const blob = new Blob([JSON.stringify(backupPayload(), null, 2)], { type: "application/json" });
+      const filename = `lunas-diary-${todayISO()}.json`;
+
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{ description: "Luna's Diary backup", accept: { "application/json": [".json"] } }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          renderBackupStatus("Το αρχείο αποθηκεύτηκε.");
+          return;
+        } catch (error) {
+          if (error?.name === "AbortError") return;
+        }
+      }
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `lunas-diary-backup-${todayISO()}.json`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      renderBackupStatus("Το αρχείο αποθηκεύτηκε στις λήψεις.");
     }
 
-    function importData() {
+    function loadDataFile() {
       document.getElementById("importFile").click();
     }
 
@@ -1210,13 +1232,17 @@
         saveStorage();
         renderAll();
       } catch (error) {
-        alert("Δεν μπόρεσα να διαβάσω αυτό το JSON backup.");
+        alert("Δεν μπόρεσα να διαβάσω αυτό το αρχείο.");
       }
     }
 
-    function renderBackupStatus() {
+    function renderBackupStatus(message = "") {
       const el = document.getElementById("backupStatus");
       if (!el) return;
+      if (message) {
+        el.textContent = message;
+        return;
+      }
       const meta = JSON.parse(localStorage.getItem(`${storageKey}Meta`) || "{}");
       if (!meta.updatedAt) {
         el.textContent = entries.length ? `${entries.length} καταγραφές αποθηκευμένες σε αυτή τη συσκευή.` : "Δεν υπάρχει ακόμα τοπικό backup σε αυτή τη συσκευή.";
