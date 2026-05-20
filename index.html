@@ -655,7 +655,7 @@
       z-index: 9;
       width: min(calc(100% - 24px), 456px);
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 6px;
       padding: 8px;
       padding-bottom: calc(8px + var(--safe-bottom));
@@ -849,29 +849,6 @@
         <div class="entries" id="wellnessEntries"></div>
       </section>
 
-      <section id="settings" class="screen">
-        <div class="section-title">
-          <h2>Ρυθμίσεις</h2>
-          <span class="mini-note">τοπικά δεδομένα</span>
-        </div>
-        <div class="panel">
-          <h2 style="font-size:18px;">Απόρρητο</h2>
-          <p class="hint" style="margin-top:8px;">Οι καταγραφές αποθηκεύονται μόνο στον browser αυτής της συσκευής μέσω localStorage.</p>
-          <div class="privacy-box">Δεν αντικαθιστά γιατρό ή ιατρική συμβουλή. Είναι προσωπικό ημερολόγιο για να οργανώνεις ημερομηνίες, φάρμακα, συμπτώματα και σημειώσεις.</div>
-          <div class="pill-actions">
-            <button class="btn" type="button" onclick="saveDataFile()">Αποθήκευση αρχείου</button>
-            <button class="btn" type="button" onclick="loadDataFile()">Φόρτωση αρχείου</button>
-            <button class="btn" type="button" onclick="clearAll()">Καθαρισμός</button>
-          </div>
-          <input id="importFile" type="file" accept="application/json,.json" hidden onchange="handleImportFile(event)" />
-          <p class="hint" id="backupStatus" style="margin-top:10px;"></p>
-          <p class="hint" id="cloudStatus" style="margin-top:8px;"></p>
-        </div>
-        <div class="panel">
-          <h2 style="font-size:18px;">Επόμενη φάση</h2>
-          <p class="hint" style="margin-top:8px;">Reminder για ενέσεις, PIN lock, PDF report για γιατρό, PWA εγκατάσταση και cloud sync μπορούν να μπουν όταν προχωρήσει το backend.</p>
-        </div>
-      </section>
     </main>
   </div>
 
@@ -880,7 +857,6 @@
     <button class="nav-btn" type="button" onclick="showScreen('calendar', this)"><span>📅</span>Ημερ.</button>
     <button class="nav-btn" type="button" onclick="showScreen('meds', this)"><span>💊</span>Θεραπεία</button>
     <button class="nav-btn" type="button" onclick="showScreen('wellness', this)"><span>🦋</span>Σώμα</button>
-    <button class="nav-btn" type="button" onclick="showScreen('settings', this)"><span>🎀</span>Ρυθμ.</button>
   </nav>
 
   <div class="modal" id="entryModal" onclick="modalBackdrop(event)">
@@ -1245,105 +1221,6 @@
       renderCalendarList();
       renderList("medEntries", entries.filter(e => e.type === "medicine" || e.type === "injection"));
       renderList("wellnessEntries", entries.filter(e => ["period", "side", "intimacy", "note"].includes(e.type)));
-      renderBackupStatus();
-    }
-
-    function clearAll() {
-      if (!confirm("Να διαγραφούν όλες οι καταγραφές από αυτή τη συσκευή;")) return;
-      entries = [];
-      saveStorage();
-      renderAll();
-    }
-
-    function backupPayload() {
-      return {
-        app: "lunas-diary",
-        version: 1,
-        savedAt: new Date().toISOString(),
-        entries
-      };
-    }
-
-    async function saveDataFile() {
-      const blob = new Blob([JSON.stringify(backupPayload(), null, 2)], { type: "application/json" });
-      const filename = `lunas-diary-${todayISO()}.json`;
-
-      if (window.showSaveFilePicker) {
-        try {
-          const handle = await window.showSaveFilePicker({
-            suggestedName: filename,
-            types: [{ description: "Luna's Diary backup", accept: { "application/json": [".json"] } }]
-          });
-          const writable = await handle.createWritable();
-          await writable.write(blob);
-          await writable.close();
-          renderBackupStatus("Το αρχείο αποθηκεύτηκε.");
-          return;
-        } catch (error) {
-          if (error?.name === "AbortError") return;
-        }
-      }
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-      renderBackupStatus("Το αρχείο αποθηκεύτηκε στις λήψεις.");
-    }
-
-    function loadDataFile() {
-      document.getElementById("importFile").click();
-    }
-
-    function normalizeImportedEntry(entry) {
-      return {
-        id: entry.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
-        type: typeInfo[entry.type] ? entry.type : "note",
-        date: entry.date || todayISO(),
-        a: entry.a || "",
-        b: entry.b || "",
-        c: entry.c || "",
-        notes: entry.notes || "",
-        createdAt: entry.createdAt || new Date().toISOString()
-      };
-    }
-
-    async function handleImportFile(event) {
-      const file = event.target.files?.[0];
-      event.target.value = "";
-      if (!file) return;
-
-      try {
-        const data = JSON.parse(await file.text());
-        const importedEntries = Array.isArray(data) ? data : data.entries;
-        if (!Array.isArray(importedEntries)) throw new Error("Invalid backup");
-
-        if (entries.length && !confirm("Να αντικατασταθούν οι τωρινές καταγραφές με αυτό το backup;")) return;
-
-        entries = importedEntries.map(normalizeImportedEntry).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-        saveStorage();
-        renderAll();
-      } catch (error) {
-        alert("Δεν μπόρεσα να διαβάσω αυτό το αρχείο.");
-      }
-    }
-
-    function renderBackupStatus(message = "") {
-      const el = document.getElementById("backupStatus");
-      if (!el) return;
-      if (message) {
-        el.textContent = message;
-        return;
-      }
-      const meta = JSON.parse(localStorage.getItem(`${storageKey}Meta`) || "{}");
-      if (!meta.updatedAt) {
-        el.textContent = entries.length ? `${entries.length} καταγραφές αποθηκευμένες σε αυτή τη συσκευή.` : "Δεν υπάρχει ακόμα τοπικό backup σε αυτή τη συσκευή.";
-        return;
-      }
-      const updated = new Date(meta.updatedAt).toLocaleString("el-GR", { dateStyle: "short", timeStyle: "short" });
-      el.textContent = `${meta.count || entries.length} καταγραφές στη συσκευή. Τελευταία αποθήκευση: ${updated}.`;
     }
 
     function setCloudStatus(message) {
