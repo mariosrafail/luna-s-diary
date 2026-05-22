@@ -954,11 +954,11 @@
   </div>
 
   <script>
-    const storageKey = "lunasDiaryEntries";
-    const oldStorageKey = "endoBloomEntries";
     const accountKey = "lunasDiaryAccount";
     const apiUrl = "/.netlify/functions/luna-api";
-    let entries = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem(oldStorageKey) || "[]");
+    localStorage.removeItem("lunasDiaryEntries");
+    localStorage.removeItem("endoBloomEntries");
+    let entries = [];
     let account = JSON.parse(localStorage.getItem(accountKey) || "null");
     let encryptionKey = null;
     let currentMonth = new Date();
@@ -1161,8 +1161,7 @@
 
     function saveStorage() {
       if (!account || !encryptionKey) {
-        localStorage.setItem(storageKey, JSON.stringify(entries));
-        setCloudStatus("Saved locally. Log in to sync encrypted data.");
+        setCloudStatus("Log in first. Local entry storage is disabled.");
         return;
       }
       syncEncryptedEntries();
@@ -1239,6 +1238,10 @@
 
     function saveEntry(event) {
       event.preventDefault();
+      if (!account || !encryptionKey) {
+        setCloudStatus("Log in first. Nothing is saved locally.");
+        return;
+      }
       const type = document.getElementById("entryType").value;
       entries.unshift({
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
@@ -1432,11 +1435,7 @@
         const remote = await api("load");
         if (remote.payload) {
           entries = await decryptEntries(remote.payload);
-        } else if (entries.length) {
-          await syncEncryptedEntries();
         }
-        localStorage.removeItem(storageKey);
-        localStorage.removeItem(oldStorageKey);
         document.getElementById("authPassword").value = "";
         renderAll();
         setCloudStatus("Logged in. Encrypted data loaded.");
@@ -1459,8 +1458,6 @@
         const payload = await encryptEntries();
         const result = await api("save", { payload });
         const synced = new Date(result.syncedAt).toLocaleString("el-GR", { dateStyle: "short", timeStyle: "short" });
-        localStorage.removeItem(storageKey);
-        localStorage.removeItem(oldStorageKey);
         setCloudStatus(`Encrypted sync complete: ${synced}.`);
       } catch (error) {
         setCloudStatus(`Encrypted sync failed: ${error.message}`);
