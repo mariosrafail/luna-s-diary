@@ -774,6 +774,38 @@
       display: flex;
     }
 
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 246, 251, .86);
+      backdrop-filter: blur(10px);
+    }
+
+    .loading-overlay[hidden] {
+      display: none;
+    }
+
+    .loading-card {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      color: var(--plum);
+      font-weight: 800;
+    }
+
+    .loading-butterfly {
+      font-size: 46px;
+      animation: flutter .9s ease-in-out infinite;
+    }
+
+    @keyframes flutter {
+      0%, 100% { transform: translateY(0) rotate(-6deg) scale(1); }
+      50% { transform: translateY(-10px) rotate(8deg) scale(1.08); }
+    }
+
     @media (min-width: 720px) {
       .app { padding-top: 24px; }
       .top { position: relative; }
@@ -781,6 +813,13 @@
   </style>
 </head>
 <body>
+  <div class="loading-overlay" id="loadingOverlay" hidden>
+    <div class="loading-card">
+      <div class="loading-butterfly">🦋</div>
+      <div id="loadingText">Φορτώνει...</div>
+    </div>
+  </div>
+
   <div class="decor" aria-hidden="true">
     <div class="float">🦋</div>
     <div class="float">🎀</div>
@@ -955,6 +994,8 @@
 
   <script>
     const accountKey = "lunasDiaryAccount";
+    const keyDbName = "lunasDiaryKeys";
+    const keyStoreName = "keys";
     const apiUrl = "/.netlify/functions/luna-api";
     localStorage.removeItem("lunasDiaryEntries");
     localStorage.removeItem("endoBloomEntries");
@@ -1092,6 +1133,64 @@
         binary += String.fromCharCode(...array.subarray(i, i + 0x8000));
       }
       return btoa(binary);
+    }
+
+    function showLoading(message = "Φορτώνει...") {
+      const overlay = document.getElementById("loadingOverlay");
+      const text = document.getElementById("loadingText");
+      if (text) text.textContent = message;
+      if (overlay) overlay.hidden = false;
+    }
+
+    function hideLoading() {
+      const overlay = document.getElementById("loadingOverlay");
+      if (overlay) overlay.hidden = true;
+    }
+
+    function openKeyDb() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(keyDbName, 1);
+        request.onupgradeneeded = () => {
+          request.result.createObjectStore(keyStoreName, { keyPath: "id" });
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function storeCryptoKey(username, key) {
+      const db = await openKeyDb();
+      await new Promise((resolve, reject) => {
+        const transaction = db.transaction(keyStoreName, "readwrite");
+        transaction.objectStore(keyStoreName).put({ id: username.trim().toLowerCase(), key });
+        transaction.oncomplete = resolve;
+        transaction.onerror = () => reject(transaction.error);
+      });
+      db.close();
+    }
+
+    async function loadCryptoKey(username) {
+      const db = await openKeyDb();
+      const record = await new Promise((resolve, reject) => {
+        const transaction = db.transaction(keyStoreName, "readonly");
+        const request = transaction.objectStore(keyStoreName).get(username.trim().toLowerCase());
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => reject(request.error);
+      });
+      db.close();
+      return record?.key || null;
+    }
+
+    async function deleteCryptoKey(username) {
+      if (!username) return;
+      const db = await openKeyDb();
+      await new Promise((resolve, reject) => {
+        const transaction = db.transaction(keyStoreName, "readwrite");
+        transaction.objectStore(keyStoreName).delete(username.trim().toLowerCase());
+        transaction.oncomplete = resolve;
+        transaction.onerror = () => reject(transaction.error);
+      });
+      db.close();
     }
 
     function base64ToBytes(value) {
@@ -1410,6 +1509,7 @@
         const keys = await deriveAccountKeys(username, password, salt);
         const result = await api("signup", { username, salt, authHash: keys.authHash }, "");
         setAccount(username, result.token, keys.encryption);
+        await storeCryptoKey(username, keys.encryption);
         await syncEncryptedEntries();
         document.getElementById("authPassword").value = "";
         setCloudStatus("Account created. Data synced encrypted.");
@@ -1432,6 +1532,7 @@
         const keys = await deriveAccountKeys(username, password, saltResult.salt);
         const loginResult = await api("login", { username, authHash: keys.authHash }, "");
         setAccount(username, loginResult.token, keys.encryption);
+        await storeCryptoKey(username, keys.encryption);
         const remote = await api("load");
         if (remote.payload) {
           entries = await decryptEntries(remote.payload);
@@ -1445,7 +1546,8 @@
       }
     }
 
-    function logoutAccount() {
+    async function logoutAccount() {
+      await deleteCryptoKey(account?.username);
       clearAccount();
       entries = [];
       renderAll();
@@ -1464,18 +1566,50 @@
       }
     }
 
-    function initAccountView() {
+    async function loadAccountEntries() {
+      showLoading("Φορτώνει τα δεδομένα...");
+      const remote = await api("load");
+      if (remote.payload) {
+        entries = await decryptEntries(remote.payload);
+      }
+      renderAll();
+      hideLoading();
+    }
+
+    async function initAccountView() {
       if (account?.username && account?.token) {
         document.getElementById("authUsername").value = account.username;
-        setCloudStatus("Enter password to unlock encrypted data.");
+        try {
+          showLoading("Ξεκλειδώνει το ημερολόγιο...");
+          const storedKey = await loadCryptoKey(account.username);
+          if (!storedKey) {
+            clearAccount();
+            setCloudStatus("Enter password to unlock encrypted data.");
+            return;
+          }
+          setAccount(account.username, account.token, storedKey);
+          await loadAccountEntries();
+          setCloudStatus("Logged in. Encrypted data loaded.");
+        } catch (error) {
+          clearAccount();
+          entries = [];
+          renderAll();
+          setCloudStatus("Session expired. Log in again.");
+        } finally {
+          hideLoading();
+        }
       } else {
         clearAccount();
       }
     }
 
-    initAccountView();
-    document.getElementById("todayLabel").textContent = new Date().toLocaleDateString("el-GR", { day: "2-digit", month: "short" });
-    renderAll();
+    async function bootApp() {
+      document.getElementById("todayLabel").textContent = new Date().toLocaleDateString("el-GR", { day: "2-digit", month: "short" });
+      renderAll();
+      await initAccountView();
+    }
+
+    bootApp();
   </script>
 </body>
 </html>
