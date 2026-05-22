@@ -837,6 +837,157 @@
       from { opacity: 0; transform: translateY(22px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    .hero,
+    .logo,
+    .panel,
+    .daily-quote-card,
+    .daily-song,
+    .quick-card,
+    .entry,
+    .stat,
+    .day,
+    .btn,
+    .nav-btn,
+    .month-btn,
+    .today-pill,
+    .delete,
+    input,
+    select,
+    textarea {
+      transition:
+        transform .18s cubic-bezier(.2, .8, .2, 1),
+        box-shadow .18s ease,
+        border-color .18s ease,
+        background .18s ease,
+        opacity .18s ease;
+    }
+
+    .hero {
+      animation: softRise .34s ease both;
+    }
+
+    .daily-quote-card,
+    .panel,
+    .quick-card,
+    .entry {
+      animation: cardIn .26s ease both;
+    }
+
+    .entries .entry:nth-child(1) { animation-delay: .02s; }
+    .entries .entry:nth-child(2) { animation-delay: .05s; }
+    .entries .entry:nth-child(3) { animation-delay: .08s; }
+    .entries .entry:nth-child(4) { animation-delay: .11s; }
+    .entries .entry:nth-child(5) { animation-delay: .14s; }
+
+    .btn:active,
+    .nav-btn:active,
+    .today-pill:active,
+    .month-btn:active,
+    .daily-song:active,
+    .quick-card:active,
+    .day:active,
+    .delete:active {
+      transform: scale(.97);
+    }
+
+    .entry:active,
+    .panel:active,
+    .daily-quote-card:active {
+      transform: scale(.995);
+    }
+
+    .nav-btn.active span {
+      animation: iconPop .22s ease both;
+    }
+
+    .day.selected {
+      animation: selectedPulse .28s ease both;
+    }
+
+    .modal.open {
+      animation: backdropIn .18s ease both;
+    }
+
+    .modal.open .modal-card {
+      animation: sheetPop .28s cubic-bezier(.2, .9, .2, 1) both;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      transform: translateY(-1px);
+    }
+
+    @media (hover: hover) {
+      .quick-card:hover,
+      .entry:hover,
+      .panel:hover,
+      .daily-quote-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 18px 38px rgba(190, 57, 132, .14);
+      }
+
+      .btn:hover,
+      .today-pill:hover,
+      .daily-song:hover,
+      .delete:hover,
+      .month-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(190, 57, 132, .13);
+      }
+
+      .day:hover {
+        transform: translateY(-1px);
+        border-color: rgba(232, 79, 156, .22);
+      }
+
+      .nav-btn:hover {
+        transform: translateY(-1px);
+      }
+    }
+
+    @keyframes softRise {
+      from { opacity: 0; transform: translateY(10px) scale(.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(8px) scale(.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes iconPop {
+      0% { transform: scale(.88); }
+      70% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes selectedPulse {
+      0% { transform: scale(.96); }
+      70% { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes backdropIn {
+      from { background: rgba(74, 36, 61, 0); }
+      to { background: rgba(74, 36, 61, .28); }
+    }
+
+    @keyframes sheetPop {
+      from { opacity: 0; transform: translateY(28px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .001ms !important;
+      }
+    }
 
     .auth-panel {
       margin: 0 0 14px;
