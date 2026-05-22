@@ -730,6 +730,50 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    .auth-panel {
+      margin: 0 0 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .82);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .auth-panel.signed-in .auth-form {
+      display: none;
+    }
+
+    .auth-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 9px;
+    }
+
+    .auth-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: 10px;
+    }
+
+    .auth-status {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .account-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .auth-panel.signed-in .account-bar {
+      display: flex;
+    }
+
     @media (min-width: 720px) {
       .app { padding-top: 24px; }
       .top { position: relative; }
@@ -773,6 +817,27 @@
         </div>
       </div>
     </header>
+
+    <section class="auth-panel" id="authPanel">
+      <div class="auth-form">
+        <div class="auth-row">
+          <input id="authUsername" autocomplete="username" placeholder="Username" />
+          <input id="authPassword" type="password" autocomplete="current-password" placeholder="Password" />
+        </div>
+        <div class="auth-actions">
+          <button class="btn btn-primary" type="button" onclick="loginAccount()">Log in</button>
+          <button class="btn" type="button" onclick="createAccount()">Create account</button>
+        </div>
+      </div>
+      <div class="account-bar">
+        <div>
+          <strong id="accountName">Account</strong>
+          <p class="auth-status" id="cloudStatus">Encrypted sync ready.</p>
+        </div>
+        <button class="btn" type="button" onclick="logoutAccount()">Log out</button>
+      </div>
+      <p class="auth-status" id="authStatus">Log in to sync encrypted data to Postgres.</p>
+    </section>
 
     <main>
       <section id="home" class="screen active">
@@ -891,7 +956,11 @@
   <script>
     const storageKey = "lunasDiaryEntries";
     const oldStorageKey = "endoBloomEntries";
+    const accountKey = "lunasDiaryAccount";
+    const apiUrl = "/.netlify/functions/luna-api";
     let entries = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem(oldStorageKey) || "[]");
+    let account = JSON.parse(localStorage.getItem(accountKey) || "null");
+    let encryptionKey = null;
     let currentMonth = new Date();
     let activeDate = todayISO();
 
@@ -1016,10 +1085,87 @@
       renderAll();
     }
 
+    function bytesToBase64(bytes) {
+      const array = new Uint8Array(bytes);
+      let binary = "";
+      for (let i = 0; i < array.length; i += 0x8000) {
+        binary += String.fromCharCode(...array.subarray(i, i + 0x8000));
+      }
+      return btoa(binary);
+    }
+
+    function base64ToBytes(value) {
+      return Uint8Array.from(atob(value), char => char.charCodeAt(0));
+    }
+
+    async function sha256Base64(value) {
+      const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+      return bytesToBase64(hash);
+    }
+
+    async function deriveAccountKeys(username, password, saltBase64) {
+      const salt = base64ToBytes(saltBase64);
+      const material = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(password),
+        "PBKDF2",
+        false,
+        ["deriveBits", "deriveKey"]
+      );
+      const encryption = await crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt, iterations: 310000, hash: "SHA-256" },
+        material,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+      const authBits = await crypto.subtle.deriveBits(
+        { name: "PBKDF2", salt, iterations: 310000, hash: "SHA-256" },
+        material,
+        256
+      );
+      const authHash = await sha256Base64(`${username.trim().toLowerCase()}:${bytesToBase64(authBits)}`);
+      return { encryption, authHash };
+    }
+
+    async function api(action, body = {}, token = account?.token) {
+      const headers = { "content-type": "application/json" };
+      if (token) headers.authorization = `Bearer ${token}`;
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ action, ...body })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) throw new Error(result.error || "Request failed");
+      return result;
+    }
+
+    async function encryptEntries() {
+      if (!encryptionKey) throw new Error("Missing encryption key");
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const data = new TextEncoder().encode(JSON.stringify(entries));
+      const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, encryptionKey, data);
+      return { version: 1, iv: bytesToBase64(iv), data: bytesToBase64(encrypted) };
+    }
+
+    async function decryptEntries(payload) {
+      if (!payload) return [];
+      const decrypted = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: base64ToBytes(payload.iv) },
+        encryptionKey,
+        base64ToBytes(payload.data)
+      );
+      return JSON.parse(new TextDecoder().decode(decrypted));
+    }
+
     function saveStorage() {
-      localStorage.setItem(storageKey, JSON.stringify(entries));
-      localStorage.setItem(`${storageKey}Meta`, JSON.stringify({ updatedAt: new Date().toISOString(), count: entries.length }));
-      syncNextcloud();
+      if (!account || !encryptionKey) {
+        localStorage.setItem(storageKey, JSON.stringify(entries));
+        setCloudStatus("Saved locally. Log in to sync encrypted data.");
+        return;
+      }
+      syncEncryptedEntries();
     }
 
     function showScreen(id, btn) {
@@ -1228,28 +1374,109 @@
     }
 
     function setCloudStatus(message) {
-      const el = document.getElementById("cloudStatus");
-      if (el) el.textContent = message;
+      document.querySelectorAll("#cloudStatus, #authStatus").forEach(el => {
+        el.textContent = message;
+      });
     }
 
-    async function syncNextcloud() {
-      setCloudStatus("Συγχρονισμός με Nextcloud...");
-      try {
-        const response = await fetch("/.netlify/functions/sync-nextcloud", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ entries })
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok || !result.ok) throw new Error(result.error || "Sync failed");
+    function setAccount(username, token, key) {
+      account = { username, token };
+      encryptionKey = key;
+      localStorage.setItem(accountKey, JSON.stringify(account));
+      document.getElementById("authPanel")?.classList.add("signed-in");
+      document.getElementById("accountName").textContent = username;
+    }
 
-        const synced = new Date(result.syncedAt).toLocaleString("el-GR", { dateStyle: "short", timeStyle: "short" });
-        setCloudStatus(`Nextcloud ενημερώθηκε: ${synced}.`);
+    function clearAccount() {
+      account = null;
+      encryptionKey = null;
+      localStorage.removeItem(accountKey);
+      document.getElementById("authPanel")?.classList.remove("signed-in");
+    }
+
+    async function createAccount() {
+      const username = document.getElementById("authUsername").value.trim();
+      const password = document.getElementById("authPassword").value;
+      if (!username || password.length < 8) {
+        setCloudStatus("Use a username and a password with at least 8 characters.");
+        return;
+      }
+      try {
+        setCloudStatus("Creating encrypted account...");
+        const salt = bytesToBase64(crypto.getRandomValues(new Uint8Array(16)));
+        const keys = await deriveAccountKeys(username, password, salt);
+        const result = await api("signup", { username, salt, authHash: keys.authHash }, "");
+        setAccount(username, result.token, keys.encryption);
+        await syncEncryptedEntries();
+        document.getElementById("authPassword").value = "";
+        setCloudStatus("Account created. Data synced encrypted.");
       } catch (error) {
-        setCloudStatus("Τοπικά αποθηκευμένο. Το Nextcloud δεν ενημερώθηκε.");
+        setCloudStatus(`Account creation failed: ${error.message}`);
       }
     }
 
+    async function loginAccount() {
+      const username = document.getElementById("authUsername").value.trim();
+      const password = document.getElementById("authPassword").value;
+      if (!username || !password) {
+        setCloudStatus("Enter username and password.");
+        return;
+      }
+      try {
+        setCloudStatus("Logging in...");
+        const saltResult = await api("salt", { username }, "");
+        if (!saltResult.exists) throw new Error("Account not found");
+        const keys = await deriveAccountKeys(username, password, saltResult.salt);
+        const loginResult = await api("login", { username, authHash: keys.authHash }, "");
+        setAccount(username, loginResult.token, keys.encryption);
+        const remote = await api("load");
+        if (remote.payload) {
+          entries = await decryptEntries(remote.payload);
+        } else if (entries.length) {
+          await syncEncryptedEntries();
+        }
+        localStorage.removeItem(storageKey);
+        localStorage.removeItem(oldStorageKey);
+        document.getElementById("authPassword").value = "";
+        renderAll();
+        setCloudStatus("Logged in. Encrypted data loaded.");
+      } catch (error) {
+        clearAccount();
+        setCloudStatus(`Login failed: ${error.message}`);
+      }
+    }
+
+    function logoutAccount() {
+      clearAccount();
+      entries = [];
+      renderAll();
+      setCloudStatus("Logged out.");
+    }
+
+    async function syncEncryptedEntries() {
+      try {
+        setCloudStatus("Encrypting and syncing...");
+        const payload = await encryptEntries();
+        const result = await api("save", { payload });
+        const synced = new Date(result.syncedAt).toLocaleString("el-GR", { dateStyle: "short", timeStyle: "short" });
+        localStorage.removeItem(storageKey);
+        localStorage.removeItem(oldStorageKey);
+        setCloudStatus(`Encrypted sync complete: ${synced}.`);
+      } catch (error) {
+        setCloudStatus(`Encrypted sync failed: ${error.message}`);
+      }
+    }
+
+    function initAccountView() {
+      if (account?.username && account?.token) {
+        document.getElementById("authUsername").value = account.username;
+        setCloudStatus("Enter password to unlock encrypted data.");
+      } else {
+        clearAccount();
+      }
+    }
+
+    initAccountView();
     document.getElementById("todayLabel").textContent = new Date().toLocaleDateString("el-GR", { day: "2-digit", month: "short" });
     renderAll();
   </script>
