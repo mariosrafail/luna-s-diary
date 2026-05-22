@@ -817,6 +817,22 @@
       }
     }
 
+    .confirm-modal {
+      align-items: center;
+    }
+
+    .confirm-card {
+      max-width: 360px;
+      text-align: center;
+    }
+
+    .confirm-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
     @keyframes sheet {
       from { opacity: 0; transform: translateY(22px); }
       to { opacity: 1; transform: translateY(0); }
@@ -1084,6 +1100,17 @@
     </div>
   </div>
 
+  <div class="modal confirm-modal" id="deleteConfirmModal" onclick="deleteBackdrop(event)">
+    <div class="modal-card confirm-card">
+      <h2 style="font-size:20px;">Είσαι σίγουρη;</h2>
+      <p class="subtitle">Είσαι σίγουρη ότι θες να το σβήσεις;</p>
+      <div class="confirm-actions">
+        <button class="btn" type="button" onclick="closeDeleteConfirm()">Άκυρο</button>
+        <button class="btn btn-primary" type="button" onclick="confirmDeleteEntry()">Σβήσιμο</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const accountKey = "lunasDiaryAccount";
     const keyDbName = "lunasDiaryKeys";
@@ -1096,6 +1123,7 @@
     let encryptionKey = null;
     let currentMonth = new Date();
     let activeDate = todayISO();
+    let pendingDeleteId = "";
 
     const typeInfo = {
       period: { title: "Νέα περίοδος 🌸", subtitle: "Ροή, πόνος, διάθεση", label: "Περίοδος", icon: "🌸" },
@@ -1321,6 +1349,15 @@
       if (event.target.id === "entryModal") closeModal();
     }
 
+    function deleteBackdrop(event) {
+      if (event.target.id === "deleteConfirmModal") closeDeleteConfirm();
+    }
+
+    function closeDeleteConfirm() {
+      pendingDeleteId = "";
+      document.getElementById("deleteConfirmModal").classList.remove("open");
+    }
+
     function fieldsFor(type) {
       if (type === "period") {
         return `
@@ -1422,7 +1459,14 @@
     }
 
     function deleteEntry(id) {
-      entries = entries.filter(entry => entry.id !== id);
+      pendingDeleteId = id;
+      document.getElementById("deleteConfirmModal").classList.add("open");
+    }
+
+    function confirmDeleteEntry() {
+      if (!pendingDeleteId) return;
+      entries = entries.filter(entry => entry.id !== pendingDeleteId);
+      closeDeleteConfirm();
       saveStorage();
       renderAll();
     }
