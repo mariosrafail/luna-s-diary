@@ -4,6 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Luna's Diary</title>
+  <meta name="theme-color" content="#e84f9c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Luna" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="assets/icons/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" sizes="180x180" />
   <style>
     :root {
       --bg: #fff6fb;
@@ -890,7 +898,7 @@
     const typeInfo = {
       period: { title: "Νέα περίοδος 🌸", subtitle: "Ροή, πόνος, διάθεση", label: "Περίοδος", icon: "🌸" },
       medicine: { title: "Νέο φάρμακο 💊", subtitle: "Όνομα, ώρα και δοσολογία", label: "Φάρμακο", icon: "💊" },
-      injection: { title: "Νέα ένεση 💉", subtitle: "Σημείο ένεσης και επόμενη δόση", label: "Ένεση", icon: "💉" },
+      injection: { title: "Νέα ένεση 💉", subtitle: "Επόμενη δόση", label: "Ένεση", icon: "💉" },
       side: { title: "Νέα παρενέργεια 🤍", subtitle: "Ένταση, διάρκεια, περιγραφή", label: "Παρενέργεια", icon: "🤍" },
       intimacy: { title: "Προσωπική σημείωση 💕", subtitle: "Σεξ, αυνανισμός, πόνος ή άνεση", label: "Προσωπικό", icon: "💕" },
       note: { title: "Γενική σημείωση 🎀", subtitle: "Οτιδήποτε θέλεις να θυμάσαι", label: "Σημείωση", icon: "🎀" }
@@ -1062,7 +1070,6 @@
       if (type === "injection") {
         return `
           <label for="fieldA">Όνομα ή τύπος ένεσης</label><select id="fieldA" required><option>Articlox</option><option>Γυναικολόγος</option></select>
-          <label for="fieldB">Σημείο ένεσης</label><select id="fieldB"><option>Κοιλιά</option><option>Μηρός</option><option>Γλουτός</option><option>Μπράτσο</option><option>Άλλο</option></select>
           <label for="fieldC">Επόμενη ημερομηνία</label><input type="date" id="fieldC">`;
       }
       if (type === "side") {
