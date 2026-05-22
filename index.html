@@ -631,6 +631,12 @@
       font-weight: 900;
     }
 
+    .entry-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
     .empty-state {
       border: 1px dashed #efacd2;
       border-radius: 21px;
@@ -985,6 +991,7 @@
       </div>
       <form id="entryForm" onsubmit="saveEntry(event)">
         <input type="hidden" id="entryType" />
+        <input type="hidden" id="entryId" />
         <label for="entryDate">Ημερομηνία</label>
         <input type="date" id="entryDate" required />
         <div id="dynamicFields"></div>
@@ -1278,12 +1285,32 @@
 
     function openModal(type, date = activeDate) {
       const info = typeInfo[type];
+      document.getElementById("entryId").value = "";
       document.getElementById("entryType").value = type;
       document.getElementById("modalTitle").textContent = info.title;
       document.getElementById("modalSubtitle").textContent = info.subtitle;
       document.getElementById("entryDate").value = date;
       document.getElementById("entryNotes").value = "";
       document.getElementById("dynamicFields").innerHTML = fieldsFor(type);
+      document.getElementById("entryModal").classList.add("open");
+    }
+
+    function editEntry(id) {
+      const item = entries.find(entry => entry.id === id);
+      if (!item) return;
+      const info = typeInfo[item.type] || typeInfo.note;
+      document.getElementById("entryId").value = item.id;
+      document.getElementById("entryType").value = item.type;
+      document.getElementById("modalTitle").textContent = `Αλλαγή ${info.label}`;
+      document.getElementById("modalSubtitle").textContent = info.subtitle;
+      document.getElementById("entryDate").value = item.date;
+      document.getElementById("entryNotes").value = item.notes || "";
+      document.getElementById("dynamicFields").innerHTML = fieldsFor(item.type);
+      document.getElementById("fieldA").value = item.a || "";
+      const fieldB = document.getElementById("fieldB");
+      if (fieldB) fieldB.value = item.b || "";
+      const fieldC = document.getElementById("fieldC");
+      if (fieldC) fieldC.value = item.c || "";
       document.getElementById("entryModal").classList.add("open");
     }
 
@@ -1343,16 +1370,23 @@
         return;
       }
       const type = document.getElementById("entryType").value;
-      entries.unshift({
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      const entryId = document.getElementById("entryId").value;
+      const savedEntry = {
+        id: entryId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
         type,
         date: document.getElementById("entryDate").value,
         a: document.getElementById("fieldA")?.value || "",
         b: document.getElementById("fieldB")?.value || "",
         c: document.getElementById("fieldC")?.value || "",
         notes: document.getElementById("entryNotes").value.trim(),
-        createdAt: new Date().toISOString()
-      });
+        createdAt: entries.find(entry => entry.id === entryId)?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      if (entryId) {
+        entries = entries.map(entry => entry.id === entryId ? savedEntry : entry);
+      } else {
+        entries.unshift(savedEntry);
+      }
       saveStorage();
       closeModal();
       renderAll();
@@ -1372,7 +1406,10 @@
               <div class="entry-title">${info.icon} ${escapeHTML(info.label)}${item.a ? " · " + escapeHTML(item.a) : ""}</div>
               <div class="entry-date">${formatDate(item.date)}</div>
             </div>
-            <button class="delete" type="button" onclick="deleteEntry('${item.id}')" aria-label="Διαγραφή">×</button>
+            <div class="entry-actions">
+              <button class="delete" type="button" onclick="editEntry('${item.id}')" aria-label="Αλλαγή">✎</button>
+              <button class="delete" type="button" onclick="deleteEntry('${item.id}')" aria-label="Διαγραφή">×</button>
+            </div>
           </div>
           ${detail.length ? `<div class="tag-row">${detail.map(x => `<span class="tag">${escapeHTML(x)}</span>`).join("")}</div>` : ""}
           ${item.notes ? `<p class="entry-body">${escapeHTML(item.notes)}</p>` : ""}
