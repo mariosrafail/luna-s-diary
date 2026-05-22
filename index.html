@@ -900,7 +900,7 @@
       medicine: { title: "Νέο φάρμακο 💊", subtitle: "Όνομα, ώρα και δοσολογία", label: "Φάρμακο", icon: "💊" },
       injection: { title: "Νέα ένεση 💉", subtitle: "Επόμενη δόση", label: "Ένεση", icon: "💉" },
       side: { title: "Νέα παρενέργεια 🤍", subtitle: "Ένταση, διάρκεια, περιγραφή", label: "Παρενέργεια", icon: "🤍" },
-      intimacy: { title: "Προσωπική σημείωση 💕", subtitle: "Σεξ, αυνανισμός, πόνος ή άνεση", label: "Προσωπικό", icon: "💕" },
+      intimacy: { title: "Προσωπική σημείωση 💕", subtitle: "Σεξ, αυνανισμός ή άνεση", label: "Προσωπικό", icon: "💕" },
       note: { title: "Γενική σημείωση 🎀", subtitle: "Οτιδήποτε θέλεις να θυμάσαι", label: "Σημείωση", icon: "🎀" }
     };
 
@@ -1083,10 +1083,7 @@
       if (type === "intimacy") {
         return `
           <label for="fieldA">Είδος</label><select id="fieldA"><option>Σεξ</option><option>Αυνανισμός</option><option>Επιθυμία / libido</option><option>Άλλη προσωπική σημείωση</option></select>
-          <div class="two-cols">
-            <div><label for="fieldB">Πόνος</label><select id="fieldB"><option>Καθόλου</option><option>Ήπιος</option><option>Μέτριος</option><option>Έντονος</option></select></div>
-            <div><label for="fieldC">Άνεση</label><select id="fieldC"><option>Καλή</option><option>Μέτρια</option><option>Δύσκολη</option></select></div>
-          </div>`;
+          <label for="fieldC">Άνεση</label><select id="fieldC"><option>Καλή</option><option>Μέτρια</option><option>Δύσκολη</option></select>`;
       }
       return `
         <label for="fieldA">Τίτλος</label><input id="fieldA" placeholder="π.χ. ραντεβού, σύμπτωμα, σκέψη" required>
