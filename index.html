@@ -743,6 +743,10 @@
       display: none;
     }
 
+    .auth-panel.signed-in {
+      display: none;
+    }
+
     .auth-row {
       display: grid;
       grid-template-columns: 1fr;
@@ -780,7 +784,7 @@
       z-index: 50;
       display: grid;
       place-items: center;
-      background: rgba(255, 246, 251, .86);
+      background: #ffe1f1;
       backdrop-filter: blur(10px);
     }
 
@@ -816,7 +820,6 @@
   <div class="loading-overlay" id="loadingOverlay" hidden>
     <div class="loading-card">
       <div class="loading-butterfly">🦋</div>
-      <div id="loadingText">Φορτώνει...</div>
     </div>
   </div>
 
@@ -1137,8 +1140,6 @@
 
     function showLoading(message = "Φορτώνει...") {
       const overlay = document.getElementById("loadingOverlay");
-      const text = document.getElementById("loadingText");
-      if (text) text.textContent = message;
       if (overlay) overlay.hidden = false;
     }
 
